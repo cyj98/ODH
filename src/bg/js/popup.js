@@ -1,68 +1,73 @@
 /* global odhback, localizeHtmlPage, utilAsync, optionsLoad, optionsSave */
 async function populateAnkiDeckAndModel(options) {
-    let names = [];
-    $('#deckname').empty();
-    names = await odhback().opt_getDeckNames();
+    let names = []
+    $('#deckname').empty()
+    names = await odhback().opt_getDeckNames()
     if (names !== null) {
-        names.forEach(name => $('#deckname').append($('<option>', { value: name, text: name })));
+        names.forEach((name) =>
+            $('#deckname').append($('<option>', { value: name, text: name }))
+        )
     }
-    $('#deckname').val(options.deckname);
+    $('#deckname').val(options.deckname)
 }
 
 function populateDictionary(dicts) {
-    $('#dict').empty();
-    dicts.forEach(item => $('#dict').append($('<option>', { value: item.objectname, text: item.displayname })));
+    $('#dict').empty()
+    dicts.forEach((item) =>
+        $('#dict').append(
+            $('<option>', { value: item.objectname, text: item.displayname })
+        )
+    )
 }
 
 async function updateAnkiStatus(options) {
-    let version = await odhback().opt_getVersion();
+    let version = await odhback().opt_getVersion()
     if (version === null) {
-        $('.anki-options').hide();
+        $('.anki-options').hide()
     } else {
-        populateAnkiDeckAndModel(options);
-        $('.anki-options').show();
+        populateAnkiDeckAndModel(options)
+        $('.anki-options').show()
     }
 }
 
 async function onOptionChanged(e) {
-    if (!e.originalEvent) return;
+    if (!e.originalEvent) return
 
-    let options = await optionsLoad();
+    let options = await optionsLoad()
 
-    options.enabled = $('#enabled').prop('checked');
-    options.hotkey = $('#hotkey').val();
-    options.deckname = $('#deckname').val();
-    options.dictSelected = $('#dict').val();
-    let newOptions = await odhback().opt_optionsChanged(options);
-    optionsSave(newOptions);
+    options.enabled = $('#enabled').prop('checked')
+    options.hotkey = $('#hotkey').val()
+    options.deckname = $('#deckname').val()
+    options.dictSelected = $('#dict').val()
+    let newOptions = await odhback().opt_optionsChanged(options)
+    optionsSave(newOptions)
 }
 
 function onMoreOptions() {
     if (chrome.runtime.openOptionsPage) {
-        chrome.runtime.openOptionsPage();
+        chrome.runtime.openOptionsPage()
     } else {
-        window.open(chrome.runtime.getURL('options.html'));
+        window.open(chrome.runtime.getURL('options.html'))
     }
 }
 
 async function onReady() {
-    localizeHtmlPage();
-    let options = await optionsLoad();
-    $('#enabled').prop('checked', options.enabled);
-    $('#hotkey').val(options.hotkey);
-    $('#deckname').val(options.deckname);
-    populateDictionary(options.dictNamelist);
-    $('#dict').val(options.dictSelected);
+    localizeHtmlPage()
+    let options = await optionsLoad()
+    $('#enabled').prop('checked', options.enabled)
+    $('#hotkey').val(options.hotkey)
+    $('#deckname').val(options.deckname)
+    populateDictionary(options.dictNamelist)
+    $('#dict').val(options.dictSelected)
 
-    $('#enabled').change(onOptionChanged);
-    $('#hotkey').change(onOptionChanged);
-    $('#deckname').change(onOptionChanged);
-    $('#dict').change(onOptionChanged);
-    $('#more').click(onMoreOptions);
+    $('#enabled').change(onOptionChanged)
+    $('#hotkey').change(onOptionChanged)
+    $('#deckname').change(onOptionChanged)
+    $('#dict').change(onOptionChanged)
+    $('#more').click(onMoreOptions)
 
-    $('.anki-options').hide();
-    updateAnkiStatus(options);
-
+    $('.anki-options').hide()
+    updateAnkiStatus(options)
 }
 
-$(document).ready(utilAsync(onReady));
+$(document).ready(utilAsync(onReady))

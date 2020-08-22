@@ -1,11 +1,12 @@
 class Ankiconnect {
     constructor() {
-        this.version = 6;
+        this.version = 6
     }
 
     async ankiInvoke(action, params = {}, timeout = 3000) {
-        let version = this.version;
-        let request = { action, version, params };
+        let version = this.version
+        let request = { action, version, params }
+        console.log(request)
         return new Promise((resolve, reject) => {
             $.ajax({
                 url: 'http://127.0.0.1:8765',
@@ -15,50 +16,72 @@ class Ankiconnect {
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 success: (response) => {
+                    console.log(action, response)
                     try {
                         if (Object.getOwnPropertyNames(response).length != 2) {
-                            throw 'response has an unexpected number of fields';
+                            throw 'response has an unexpected number of fields'
                         }
-                        if (!response.hasOwnProperty('error')) {
-                            throw 'response is missing required error field';
+                        if (
+                            !Object.prototype.hasOwnProperty.call(
+                                response,
+                                'error'
+                            )
+                        ) {
+                            throw 'response is missing required error field'
                         }
-                        if (!response.hasOwnProperty('result')) {
-                            throw 'response is missing required result field';
+                        if (
+                            !Object.prototype.hasOwnProperty.call(
+                                response,
+                                'result'
+                            )
+                        ) {
+                            throw 'response is missing required result field'
                         }
                         if (response.error) {
-                            throw response.error;
+                            throw response.error
                         }
-                        resolve(response.result);
+                        resolve(response.result)
                     } catch (e) {
-                        reject(e);
+                        reject(e)
                     }
                 },
-                error: (xhr, status, err) => resolve(null),
-            });
-        });
+                // error: (xhr, status, err) => resolve(null),
+                error: () => resolve(null),
+            })
+        })
     }
 
     async addNote(note) {
-        if (note)
-            return await this.ankiInvoke('addNote', { note });
-        else
-            return Promise.resolve(null);
+        if (note) return await this.ankiInvoke('addNote', { note })
+        else return Promise.resolve(null)
+    }
+
+    // async canAddNotes(notes) {
+    //     if (notes)
+    //         return await this.ankiInvoke('canAddNotes', { notes });
+    //     else
+    //         return Promise.resolve(null);
+    // }
+
+    async findNotes(query) {
+        if (query) return await this.ankiInvoke('findNotes', { query })
+        else return Promise.resolve(null)
     }
 
     async getDeckNames() {
-        return await this.ankiInvoke('deckNames');
+        return await this.ankiInvoke('deckNames')
     }
 
     async getModelNames() {
-        return await this.ankiInvoke('modelNames');
+        return await this.ankiInvoke('modelNames')
     }
 
     async getModelFieldNames(modelName) {
-        return await this.ankiInvoke('modelFieldNames', { modelName });
+        return await this.ankiInvoke('modelFieldNames', { modelName })
     }
 
     async getVersion() {
-        let version = await this.ankiInvoke('version', {}, 100);
-        return version ? 'ver:' + version : null;
+        let version = await this.ankiInvoke('version', {}, 100)
+        return version ? 'ver:' + version : null
     }
 }
