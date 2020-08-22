@@ -16,7 +16,11 @@
 
 # Web store zip
 *.zip
-*.json
+# *.json
 
 # JS Beautify
 .jsbeautifyrc
+
+src/bg/data
+
+srcbak

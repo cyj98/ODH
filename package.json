@@ -1,0 +1,39 @@
+{
+    "name": "odh",
+    "version": "0.0.1",
+    "description": "",
+    "directories": {
+        "doc": "doc"
+    },
+    "scripts": {
+        "start": "webpack",
+        "build": "webpack --mode=production",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cyj98/odh.git"
+    },
+    "author": "cyj98",
+    "license": "GPL-3.0",
+    "bugs": {
+        "url": "https://github.com/cyj98/odh/issues"
+    },
+    "homepage": "https://github.com/cyj98/odh#readme",
+    "devDependencies": {
+        "clean-webpack-plugin": "^3.0.0",
+        "copy-webpack-plugin": "^6.0.3",
+        "eslint": "^7.7.0",
+        "prettier": "^2.0.5",
+        "terser-webpack-plugin": "^4.1.0",
+        "web-ext-webpack-plugin": "github:hiikezoe/web-ext-webpack-plugin",
+        "webextension-polyfill": "^0.6.0",
+        "webpack": "^4.44.1"
+    },
+    "prettier": {
+        "trailingComma": "es5",
+        "tabWidth": 4,
+        "semi": false,
+        "singleQuote": true
+    }
+}
