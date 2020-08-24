@@ -6,7 +6,6 @@ class Ankiconnect {
     async ankiInvoke(action, params = {}, timeout = 3000) {
         let version = this.version
         let request = { action, version, params }
-        console.log(request)
         return new Promise((resolve, reject) => {
             $.ajax({
                 url: 'http://127.0.0.1:8765',
@@ -16,7 +15,6 @@ class Ankiconnect {
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 success: (response) => {
-                    console.log(action, response)
                     try {
                         if (Object.getOwnPropertyNames(response).length != 2) {
                             throw 'response has an unexpected number of fields'
@@ -65,6 +63,11 @@ class Ankiconnect {
 
     async findNotes(query) {
         if (query) return await this.ankiInvoke('findNotes', { query })
+        else return Promise.resolve(null)
+    }
+
+    async guiBrowse(query) {
+        if (query) return await this.ankiInvoke('guiBrowse', { query })
         else return Promise.resolve(null)
     }
 

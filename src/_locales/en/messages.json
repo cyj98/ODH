@@ -51,6 +51,7 @@
     "lblReading": { "message": "Reading" },
     "lblExtrainfo": { "message": "ExtraInfo" },
     "lblDefinition": { "message": "Definition" },
+    "lblDocumentTitle": { "message": "DocumentTitle" },
     "lblDefinitions": { "message": "Definitions" },
     "lblSentence": { "message": "Sentence" },
     "lblUrl": { "message": "URL" },

@@ -49,6 +49,7 @@
     "lblReading": { "message": "發音音標" },
     "lblExtrainfo": { "message": "額外信息" },
     "lblDefinition": { "message": "單一釋義" },
+    "lblDocumentTitle": { "message": "標題" },
     "lblDefinitions": { "message": "全部釋義" },
     "lblSentence": { "message": "原句筆記" },
     "lblUrl": { "message": "來源網址" },

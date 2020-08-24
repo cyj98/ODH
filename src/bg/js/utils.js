@@ -17,6 +17,7 @@ function sanitizeOptions(options) {
         reading: '',
         extrainfo: '',
         definition: 'Back',
+        documenttitle: '',
         definitions: '',
         sentence: '',
         url: '',

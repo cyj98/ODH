@@ -51,3 +51,14 @@ async function findNotes(expression) {
         return null
     }
 }
+
+async function guiBrowse(expression) {
+    try {
+        return await sendtoBackend({
+            action: 'guiBrowse',
+            params: { expression },
+        })
+    } catch (err) {
+        return null
+    }
+}

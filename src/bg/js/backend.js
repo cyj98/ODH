@@ -99,11 +99,11 @@ class ODHBack {
             tags: ['ODH'],
         }
 
-        // let fieldnames = ['expression', 'reading', 'extrainfo', 'definition', 'definitions', 'sentence', 'url'];
         let fieldnames = [
             'expression',
             'reading',
             'extrainfo',
+            'documenttitle',
             'definitions',
             'sentence',
             'url',
@@ -149,7 +149,7 @@ class ODHBack {
         if (typeof method === 'function') method.call(this, params)
     }
 
-    async api_initBackend(params) {
+    async api_initBackend() {
         let options = await optionsLoad()
         this.ankiweb.initConnection(options)
 
@@ -170,8 +170,10 @@ class ODHBack {
             type: 'GET',
             dataType: 'text',
             timeout: 3000,
-            error: (xhr, status, error) => this.callback(null, callbackId),
-            success: (data, status) => this.callback(data, callbackId),
+            // error: (xhr, status, error) => this.callback(null, callbackId),
+            // success: (data, status) => this.callback(data, callbackId),
+            error: () => this.callback(null, callbackId),
+            success: (data) => this.callback(data, callbackId),
         }
         $.ajax(request)
     }
@@ -248,6 +250,23 @@ class ODHBack {
 
         try {
             let result = await this.target.findNotes(
+                `deck:${options.deckname} expression:${expression}`
+            )
+            callback(result)
+        } catch (err) {
+            console.error(err)
+            callback(null)
+        }
+    }
+
+    async api_guiBrowse(params) {
+        let { expression, callback } = params
+        let options = this.options
+        if (!options.deckname || !options.typename || !options.expression)
+            return null
+
+        try {
+            let result = await this.target.guiBrowse(
                 `deck:${options.deckname} expression:${expression}`
             )
             callback(result)
@@ -337,7 +356,7 @@ class ODHBack {
     }
 
     async loadScript(name) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.agent.postMessage('loadScript', { name }, (result) =>
                 resolve(result)
             )
@@ -345,7 +364,7 @@ class ODHBack {
     }
 
     async setScriptsOptions(options) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.agent.postMessage('setScriptsOptions', { options }, (result) =>
                 resolve(result)
             )
@@ -353,7 +372,7 @@ class ODHBack {
     }
 
     async findTerm(expression) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.agent.postMessage('findTerm', { expression }, (result) =>
                 resolve(result)
             )

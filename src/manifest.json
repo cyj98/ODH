@@ -51,7 +51,8 @@
         "fg/img/cloud.png",
         "fg/img/load.gif",
         "fg/img/fail.png",
-        "fg/img/good.png"
+        "fg/img/good.png",
+        "fg/img/bookmark-fill.png"
     ],
     "commands": {
           "enabled": {

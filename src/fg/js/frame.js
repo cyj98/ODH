@@ -27,6 +27,23 @@ function registerAddNoteLinks() {
     }
 }
 
+function registerGuiBrowseLinks() {
+    for (let link of document.getElementsByClassName('odh-guibrowse')) {
+        link.addEventListener('click', (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            const ds = e.currentTarget.dataset
+            window.parent.postMessage(
+                {
+                    action: 'guiBrowse',
+                    params: ds.expression,
+                },
+                '*'
+            )
+        })
+    }
+}
+
 function registerAudioLinks() {
     for (let link of document.getElementsByClassName('odh-playaudio')) {
         link.addEventListener('click', (e) => {
@@ -96,6 +113,7 @@ function hideTranslation() {
 
 function onDomContentLoaded() {
     registerAddNoteLinks()
+    registerGuiBrowseLinks()
     registerAudioLinks()
     registerSoundLinks()
     registerHiddenClass()
@@ -116,8 +134,14 @@ function api_setActionState(result) {
     const { nindex } = params
 
     // const match = document.querySelector(`.odh-addnote[data-nindex="${nindex}"].odh-addnote[data-dindex="${dindex}"]`);
-    let match = document.querySelector(`.odh-addnote[data-nindex="${nindex}"]`)
+    const match = document.querySelector(
+        `.odh-addnote[data-nindex="${nindex}"]`
+    )
     if (response) {
+        const guiBrowseMatch = document.querySelector(
+            `.odh-guibrowse[data-nindex="${nindex}"]`
+        )
+        guiBrowseMatch.style.visibility = 'visible'
         match.src = getImageSource('good')
         match.style.cursor = 'not-allowed'
         match.style.opacity = 0.5

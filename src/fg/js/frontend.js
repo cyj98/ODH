@@ -1,4 +1,4 @@
-/* global Popup, rangeFromPoint, TextSourceRange, selectedText, isEmpty, getSentence, isConnected, addNote, findNotes, getTranslation, isValidElement*/
+/* global Popup, rangeFromPoint, TextSourceRange, selectedText, isEmpty, getSentence, isConnected, addNote, findNotes, guiBrowse, getTranslation, isValidElement*/
 class ODHFront {
     constructor() {
         this.options = null
@@ -147,6 +147,10 @@ class ODHFront {
         this.popup.sendMessage('setActionState', { response, params })
     }
 
+    async api_guiBrowse(params) {
+        guiBrowse(params)
+    }
+
     api_playAudio(params) {
         let { nindex, dindex } = params
         let url = this.notes[nindex].audios[dindex]
@@ -212,12 +216,10 @@ class ODHFront {
 
         for (const [nindex, note] of notes.entries()) {
             let response = await findNotes(this.notes[nindex].expression)
-            console.log(response)
 
             let services = this.options ? this.options.services : ''
             let image = ''
             let imageclass = ''
-            // let button
             if (services != 'none') {
                 imageclass = (await isConnected())
                     ? 'class="odh-addnote"'
@@ -234,31 +236,30 @@ class ODHFront {
                 }
             }
 
+            const guiBrowseButton = `<img src="${chrome.runtime.getURL(
+                'fg/img/bookmark-fill.png'
+            )}" class="odh-guibrowse" style="${
+                image === 'good.png' ? '' : 'visibility: hidden '
+            }" data-nindex="${nindex}" data-expression="${
+                this.notes[nindex].expression
+            }"></img>`
+
             content += note.css + '<div class="odh-note">'
             let audiosegment = ''
             if (note.audios) {
-                // for (const [dindex, audio] of note.audios.entries()) {
-                for (const [audio] of note.audios.entries()) {
+                for (const [dindex, audio] of note.audios.entries()) {
+                    // for (const [, audio] of note.audios.entries()) {
                     if (audio)
-                        // audiosegment += `<img class="odh-playaudio" data-nindex="${nindex}" data-dindex="${dindex}" src="${chrome.runtime.getURL('fg/img/play.png')}"/>`;
-                        audiosegment += `<img class="odh-playaudio" data-nindex="${nindex}" src="${chrome.runtime.getURL(
+                        audiosegment += `<img class="odh-playaudio" data-nindex="${nindex}" data-dindex="${dindex}" src="${chrome.runtime.getURL(
                             'fg/img/play.png'
                         )}"/>`
+                    // audiosegment += `<img class="odh-playaudio" data-nindex="${nindex}" src="${chrome.runtime.getURL(
+                    //     'fg/img/play.png'
+                    // )}"/>`
                 }
             }
-            // content += `
-            //     <div class="odh-headsection">
-            //         <span class="odh-audios">${audiosegment}</span>
-            //         <span class="odh-expression">${note.expression}</span>
-            //         <span class="odh-reading">${note.reading}</span>
-            //         <span class="odh-extra">${note.extrainfo}</span>
-            //     </div>`;
-            // for (const [dindex, definition] of note.definitions.entries()) {
-            //     let button = (services == 'none' || services == '') ? '' : `<img ${imageclass} data-nindex="${nindex}" data-dindex="${dindex}" src="${chrome.runtime.getURL('fg/img/'+ image)}" />`;
-            //     content += `<div class="odh-definition">${button}${definition}</div>`;
-            // }
 
-            let button =
+            const button =
                 services == 'none' || services == ''
                     ? ''
                     : `<img ${imageclass} data-nindex="${nindex}" src="${chrome.runtime.getURL(
@@ -271,6 +272,7 @@ class ODHFront {
                     <span class="odh-reading">${note.reading}</span>
                     <span class="odh-extra">${note.extrainfo}</span>
                     ${button}
+                    ${guiBrowseButton}
                 </div>`
             for (const [, definition] of note.definitions.entries()) {
                 // for (const [dindex, definition] of note.definitions.entries()) {
