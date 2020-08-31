@@ -108,6 +108,7 @@ class enen_TheFreeDictionary {
         } else {
             defBlocks = [defBlock]
         }
+        const pos = '<span class="pos">phrase</span>'
 
         for (const defBlock of defBlocks) {
             let examps = defBlock.querySelectorAll('span.illustration') || []
@@ -119,7 +120,7 @@ class enen_TheFreeDictionary {
             if (!eng_tran) continue
             let definition = ''
             eng_tran = `<span class='eng_tran'>${eng_tran}</span>`
-            let tran = `<span class='tran'>${eng_tran}</span>`
+            let tran = `${pos}<span class='tran'>${eng_tran}</span>`
             definition += `${tran}`
 
             // make exmaple segement

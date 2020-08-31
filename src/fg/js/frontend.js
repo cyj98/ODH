@@ -168,7 +168,8 @@ class ODHFront {
     }
 
     async api_guiBrowse(params) {
-        guiBrowse(params)
+        let { nindex } = params
+        guiBrowse(this.notes[nindex].expression)
     }
 
     api_playAudio(params) {
@@ -260,9 +261,7 @@ class ODHFront {
                 'fg/img/bookmark-fill.png'
             )}" class="odh-guibrowse" style="${
                 image === 'good.png' ? '' : 'visibility: hidden '
-            }" data-nindex="${nindex}" data-expression="${
-                this.notes[nindex].expression
-            }"></img>`
+            }" data-nindex="${nindex}""></img>`
 
             content += note.css + '<div class="odh-note">'
             let audiosegment = ''
@@ -342,7 +341,7 @@ class ODHFront {
             <script src="${root + 'fg/js/frame.js'}"></script>
             </body>
         </html>`
-        
+
         // <div id="context">${this.sentence}</div>
     }
 }

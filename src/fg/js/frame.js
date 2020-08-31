@@ -36,7 +36,9 @@ function registerGuiBrowseLinks() {
             window.parent.postMessage(
                 {
                     action: 'guiBrowse',
-                    params: ds.expression,
+                    params: {
+                        nindex: ds.nindex,
+                    },
                 },
                 '*'
             )
