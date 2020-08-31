@@ -96,12 +96,16 @@ function cutSentence(word, offset, sentence, sentenceNum) {
             }
         }
 
-        return arr
-            .slice(start, end + 1)
-            .join('')
-            .replaceAll(word, word.replace(/[^\s]+/g, '<b>$&</b>'))
+        return (
+            arr
+                .slice(start, end + 1)
+                .join('')
+                //     .replaceAll(word, word.replace(/[^\s]+/g, '<b>$&</b>'))
+                .replaceAll(word, `[${word}]`)
+        )
     } else {
-        return sentence.replace(word, word.replace(/[^\s]+/g, '<b>$&</b>'))
+        // return sentence.replace(word, word.replace(/[^\s]+/g, '<b>$&</b>'))
+        return sentence.replace(word, `[${word}]`)
     }
 }
 

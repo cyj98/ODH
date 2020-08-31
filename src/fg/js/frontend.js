@@ -4,7 +4,7 @@ class ODHFront {
         this.options = null
         this.point = null
         this.notes = null
-        this.sentence = null
+        // this.sentence = null
         this.audio = {}
         this.enabled = true
         this.activateKey = 16 // shift 16, ctl 17, alt 18
@@ -38,23 +38,21 @@ class ODHFront {
         ) {
             const range = rangeFromPoint(this.point)
             if (range == null) return
-            let textSource = new TextSourceRange(range)
-            textSource.selectText()
             this.mousemoved = false
-            this.onSelectionEnd(e)
+            this.onSelectionEnd(range)
         }
 
         if (e.keyCode === this.exitKey || e.charCode === this.exitKey)
             this.popup.hide()
     }
 
-    onDoubleClick(e) {
-        if (!isValidElement()) return
+    // onDoubleClick(e) {
+    //     if (!isValidElement()) return
 
-        if (this.timeout) clearTimeout(this.timeout)
-        this.mousemoved = false
-        this.onSelectionEnd(e)
-    }
+    //     if (this.timeout) clearTimeout(this.timeout)
+    //     this.mousemoved = false
+    //     this.onSelectionEnd(e)
+    // }
 
     onMouseDown() {
         this.popup.hide()
@@ -68,34 +66,55 @@ class ODHFront {
         }
     }
 
-    userSelectionChanged(e) {
-        if (!this.enabled || !this.mousemoved) return
+    // userSelectionChanged(e) {
+    //     if (!this.enabled || !this.mousemoved) return
 
-        if (this.timeout) {
-            clearTimeout(this.timeout)
-        }
+    //     if (this.timeout) {
+    //         clearTimeout(this.timeout)
+    //     }
 
-        // wait 500 ms after the last selection change event
-        this.timeout = setTimeout(() => {
-            this.onSelectionEnd(e)
-            //var selEndEvent = new CustomEvent('selectionend');
-            //window.dispatchEvent(selEndEvent);
-        }, 500)
-    }
+    //     // wait 500 ms after the last selection change event
+    //     this.timeout = setTimeout(() => {
+    //         this.onSelectionEnd(e)
+    //         //var selEndEvent = new CustomEvent('selectionend');
+    //         //window.dispatchEvent(selEndEvent);
+    //     }, 500)
+    // }
 
-    async onSelectionEnd() {
+    async onSelectionEnd(range) {
         if (!this.enabled) return
 
         if (!isValidElement()) return
 
         // reset selection timeout
         this.timeout = null
-        const expression = selectedText()
-        if (isEmpty(expression)) return
 
-        let result = await getTranslation(expression)
+        let textSource = new TextSourceRange(range)
+        textSource.setWordRange(1, 1)
+        if (isEmpty(textSource.text())) return
+        textSource.selectText()
+        const result = await getTranslation(textSource.text().split(' ')[0])
         if (result == null || result.length == 0) return
-        this.notes = this.buildNote(result)
+        const wordNotes = this.buildNote(result)
+
+        textSource.setWordRange(1, 6)
+        const idiomsResult = await getTranslation(textSource.text())
+
+        if (idiomsResult == null || idiomsResult.length == 0) {
+            this.notes = wordNotes
+        } else {
+            textSource.rng.setEnd(
+                textSource.rng.endContainer,
+                // textSource.rng.startOffset + selectLength
+                textSource.rng.startOffset + idiomsResult[0].expression.length
+            )
+            textSource.selectText()
+            const idiomsNotes = this.buildNote(idiomsResult)
+            for (const wordNote of wordNotes) {
+                idiomsNotes.push(wordNote)
+            }
+            this.notes = idiomsResult
+        }
         this.popup.showNextTo(
             { x: this.point.x, y: this.point.y },
             await this.renderPopup(this.notes)
@@ -134,13 +153,14 @@ class ODHFront {
 
     async api_addNote(params) {
         // let { nindex, dindex, context } = params;
-        let { nindex, context } = params
+        let { nindex } = params
+        // console.log(this.notes[nindex])
 
         let notedef = Object.assign({}, this.notes[nindex])
         // notedef.definition = this.notes[nindex].css + this.notes[nindex].definitions[dindex];
         notedef.definitions =
             this.notes[nindex].css + this.notes[nindex].definitions.join('<hr>')
-        notedef.sentence = context
+        // notedef.sentence = this.notes[nindex].sentence
         notedef.url = window.location.href
         notedef.documenttitle = document.title
         let response = await addNote(notedef)
@@ -184,7 +204,7 @@ class ODHFront {
         //get 1 sentence around the expression.
         const expression = selectedText()
         const sentence = getSentence(this.maxContext)
-        this.sentence = sentence
+        // this.sentence = sentence
         let tmpl = {
             css: '',
             expression,
@@ -282,17 +302,17 @@ class ODHFront {
             content += '</div>'
         }
         //content += `<textarea id="odh-context" class="odh-sentence">${this.sentence}</textarea>`;
-        content += '<div id="odh-container" class="odh-sentence"></div>'
+        // content += '<div id="odh-container" class="odh-sentence"></div>'
         return this.popupHeader() + content + this.popupFooter()
     }
 
     popupHeader() {
+        // <link rel="stylesheet" href="${root + 'fg/css/spell.css'}">
         let root = chrome.runtime.getURL('/')
         return `
         <html lang="en">
             <head><meta charset="UTF-8"><title></title>
                 <link rel="stylesheet" href="${root + 'fg/css/frame.css'}">
-                <link rel="stylesheet" href="${root + 'fg/css/spell.css'}">
             </head>
             <body style="margin:0px;">
             <div class="odh-notes">`
@@ -317,13 +337,13 @@ class ODHFront {
                 <img id="good" src="${root + 'fg/img/good.png'}"/>
                 <img id="fail" src="${root + 'fg/img/fail.png'}"/>
                 <img id="play" src="${root + 'fg/img/play.png'}"/>
-                <div id="context">${this.sentence}</div>
                 <div id="monolingual">${monolingual}</div>
                 </div>
-            <script src="${root + 'fg/js/spell.js'}"></script>
             <script src="${root + 'fg/js/frame.js'}"></script>
             </body>
         </html>`
+        
+        // <div id="context">${this.sentence}</div>
     }
 }
 

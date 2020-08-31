@@ -250,7 +250,7 @@ class ODHBack {
 
         try {
             let result = await this.target.findNotes(
-                `deck:${options.deckname} expression:${expression}`
+                `deck:${options.deckname} ${options.expression}:"${expression}"`
             )
             callback(result)
         } catch (err) {
@@ -267,7 +267,7 @@ class ODHBack {
 
         try {
             let result = await this.target.guiBrowse(
-                `deck:${options.deckname} expression:${expression}`
+                `deck:${options.deckname} ${options.expression}:"${expression}"`
             )
             callback(result)
         } catch (err) {

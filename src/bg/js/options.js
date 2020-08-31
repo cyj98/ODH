@@ -101,7 +101,6 @@ function populateSysScriptsList(dictLibrary) {
         'encn_Youdao',
         'encn_Baicizhan', //en-cn dictionaries
         'enen_Collins',
-        'enen_TheFreeDictionary',
         'enen_LDOCE6MDX',
         'enen_UrbanDict', //en-en dictionaries
         'enfr_Cambridge',

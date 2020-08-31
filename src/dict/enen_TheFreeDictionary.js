@@ -1,5 +1,5 @@
 /* global api */
-class enen_Collins {
+class enen_TheFreeDictionary {
     constructor(options) {
         this.options = options
         this.maxexample = 2
@@ -21,100 +21,126 @@ class enen_Collins {
     async findTerm(word) {
         this.word = word
         //let deflection = api.deinflect(word);
-        let results = await Promise.all([this.findTheFreeDictionary(word)])
+        let results = await Promise.all([
+            this.findTheFreeDictionaryIdioms(word),
+        ])
         return [].concat(...results).filter((x) => x)
     }
 
-    async findTheFreeDictionary(word) {
+    async findTheFreeDictionaryIdioms(word) {
         let notes = []
         if (!word) return notes // return empty notes
 
-        function T(node) {
-            if (!node) return ''
-            else return node.innerText.trim()
+        // function T(node) {
+        //     if (!node) return ''
+        //     else return node.innerText.trim()
+        // }
+        let doc = ''
+
+        const suggestionBase =
+            'https://www.thefreedictionary.com/_/search/suggest.ashx?jsonp=SAYT.Callback&query='
+        const wordArr = word.split(' ')
+        const quotesRegexp = /".+?"/g
+        let foundIdiom = ''
+        for (let i = 2; i <= wordArr.length; ++i) {
+            const idiomPrefix = word.split(' ').slice(0, i).join(' ')
+            const suggestionBaseUrl =
+                suggestionBase + encodeURIComponent(idiomPrefix)
+            try {
+                let data = await api.fetch(suggestionBaseUrl)
+                let parser = new DOMParser()
+                doc = parser
+                    .parseFromString(data, 'text/html')
+                    .querySelector('body').textContent
+                if (!doc) {
+                    console.error(suggestionBaseUrl)
+                    return []
+                }
+                let foundIdioms
+                if (doc.split(', ')[1]) {
+                    foundIdioms = [...doc.split(', ')[1].matchAll(quotesRegexp)]
+                } else {
+                    console.error(doc)
+                    foundIdioms = []
+                }
+                if (foundIdioms.length === 0) {
+                    if (foundIdiom === '') {
+                        return []
+                    } else {
+                        break
+                    }
+                }
+                foundIdiom = foundIdioms[0][0].replace(/"/g, '')
+            } catch (err) {
+                console.error(err)
+                return []
+            }
         }
 
-        let base = 'https://idioms.thefreedictionary.com/'
-        let url = base + encodeURIComponent(word)
-        let doc = ''
+        const base =
+            'https://idioms.thefreedictionary.com/_/search.aspx?tab=1024&SearchBy=0&TFDBy=0&Word='
+        let url = base + encodeURIComponent(foundIdiom)
         try {
             let data = await api.fetch(url)
             let parser = new DOMParser()
             doc = parser.parseFromString(data, 'text/html')
         } catch (err) {
+            console.error(err)
             return []
         }
 
         const contentHolder = doc.querySelector('.content-holder')
 
-        const sections = contentHolder.querySelectorAll('section')
-        if (!sections) return notes
+        if (!contentHolder) return []
 
-        const expression = contentHolder.querySelector('h1')
+        const expression = contentHolder.querySelector('h1').textContent
 
-        if (expression.split(' ').length > 1) {
-            // const UKsound = contentHolder.querySelector('span.i.snd-icon-UK')
-            // const USsound = contentHolder.querySelector('span.i.snd-icon-US')
-            // const audios = [].push(UKsound, USsound)
-        }
-
-        // let dictionary = doc.querySelector('.content-holder >')
-        // if (!dictionary) return notes // return empty notes
-
-        // let expression = T(dictionary.querySelector('.h2_entry'))
-        // let reading = T(dictionary.querySelector('.pron'))
-
-        // let band = dictionary.querySelector('.word-frequency-img')
-        // let bandnum = band ? band.dataset.band : ''
-        // let extrainfo = bandnum
-        //     ? `<span class="band">${'\u25CF'.repeat(Number(bandnum))}</span>`
-        //     : ''
-
-        // let sound = dictionary.querySelector('a.hwd_sound')
-        // let audios = sound ? [sound.dataset.srcMp3] : []
+        const section = contentHolder.querySelector('section[data-src]')
+        if (!section) return notes
 
         // make definition segement
-        let definitions = []
-        // let defblocks = dictionary.querySelectorAll('.hom') || []
-        let defblocks =
-            sections[0].querySelector('ds-single') ||
-            sections[0].querySelectorAll('ds-list')
-        for (const defblock of defblocks) {
-            let pos = T(defblock.querySelector('i:first-of-type'))
-            // pos.textContent
-            pos = pos ? `<span class="pos">${pos.innerText}</span>` : ''
-            // let eng_tran = T(defblock.querySelector('.sense .def'))
-            let eng_tran = T(
-                defblock.querySelector('.sds-list')
-                    ? defblock.querySelector('.sds-list')
-                    : ''
-            )
+        const definitions = []
+        const defBlock = section.querySelector('.ds-single')
+        let defBlocks
+
+        if (!defBlock) {
+            defBlocks = section.querySelectorAll('.ds-list')
+        } else {
+            defBlocks = [defBlock]
+        }
+
+        for (const defBlock of defBlocks) {
+            let examps = defBlock.querySelectorAll('span.illustration') || []
+            for (const examp of examps) {
+                examp.remove()
+            }
+
+            let eng_tran = defBlock.textContent
             if (!eng_tran) continue
             let definition = ''
-            eng_tran = eng_tran.replace(RegExp(expression, 'gi'), '<b>$&</b>')
             eng_tran = `<span class='eng_tran'>${eng_tran}</span>`
             let tran = `<span class='tran'>${eng_tran}</span>`
-            definition += `${pos}${tran}`
+            definition += `${tran}`
 
             // make exmaple segement
-            let examp = defblock.querySelectorAll('span.illustration') || ''
-            let eng_examp = T(examp)
-                ? T(examp).replace(RegExp(expression, 'gi'), '<b>$&</b>')
-                : ''
-            definition += eng_examp
-                ? `<li class='sent'><span class='eng_sent'>${eng_examp}</span></li>`
-                : ''
+            if (examps.length > 0 && this.maxexample > 0) {
+                definition += '<ul class="sents">'
+                for (const [index, examp] of examps.entries()) {
+                    if (index > this.maxexample - 1) break // to control only 2 example sentence.
+                    const eng_examp = examp.textContent
+                    definition += eng_examp
+                        ? `<li class='sent'><span class='eng_sent'>${eng_examp}</span></li>`
+                        : ''
+                }
+                definition += '</ul>'
+            }
             definition && definitions.push(definition)
         }
-        console.log(expression, definitions)
         let css = this.renderCSS()
         notes.push({
             css,
             expression,
-            // reading,
-            // extrainfo,
             definitions,
-            // audios,
         })
         return notes
     }

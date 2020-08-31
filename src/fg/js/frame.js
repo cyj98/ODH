@@ -1,4 +1,4 @@
-/* global spell */
+// /* global spell */
 function getImageSource(id) {
     return document.querySelector(`#${id}`).src
 }
@@ -17,8 +17,8 @@ function registerAddNoteLinks() {
                     params: {
                         nindex: ds.nindex,
                         dindex: ds.dindex,
-                        context: document.querySelector('.spell-content')
-                            .innerHTML,
+                        // context: document.querySelector('.spell-content')
+                        // .innerHTML,
                     },
                 },
                 '*'
@@ -84,14 +84,17 @@ function registerSoundLinks() {
     }
 }
 
-function initSpellnTranslation() {
-    document.querySelector('#odh-container').appendChild(spell())
-    document.querySelector('.spell-content').innerHTML = document.querySelector(
-        '#context'
-    ).innerHTML
-    if (document.querySelector('#monolingual').innerText == '1')
-        hideTranslation()
-}
+// function initSpellnTranslation() {
+//     document.querySelector('#odh-container').appendChild(spell())
+//     document.querySelector('.spell-content').innerHTML = document.querySelector(
+//         '#context'
+//     ).innerHTML
+//     document.querySelector(
+//         '.spell-content'
+//     ).textContent = document.querySelector('#context').innerHTML
+//     if (document.querySelector('#monolingual').innerText == '1')
+//         hideTranslation()
+// }
 
 function registerHiddenClass() {
     for (let div of document.getElementsByClassName('odh-definition')) {
@@ -117,7 +120,7 @@ function onDomContentLoaded() {
     registerAudioLinks()
     registerSoundLinks()
     registerHiddenClass()
-    initSpellnTranslation()
+    // initSpellnTranslation()
 }
 
 function onMessage(e) {

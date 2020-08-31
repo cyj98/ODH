@@ -48,6 +48,7 @@ async function findNotes(expression) {
             params: { expression },
         })
     } catch (err) {
+        console.error(err)
         return null
     }
 }

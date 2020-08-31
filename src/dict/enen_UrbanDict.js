@@ -76,7 +76,6 @@ class enen_UrbanDict {
             }
             definition && definitions.push(definition)
         }
-        console.log(definitions)
         let css = this.renderCSS()
         notes.push({
             css,
