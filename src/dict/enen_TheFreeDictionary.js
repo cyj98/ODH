@@ -20,7 +20,6 @@ class enen_TheFreeDictionary {
 
     async findTerm(word) {
         this.word = word
-        //let deflection = api.deinflect(word);
         let results = await Promise.all([
             this.findTheFreeDictionaryIdioms(word),
         ])
@@ -41,9 +40,11 @@ class enen_TheFreeDictionary {
             'https://www.thefreedictionary.com/_/search/suggest.ashx?jsonp=SAYT.Callback&query='
         const wordArr = word.split(' ')
         const quotesRegexp = /".+?"/g
-        let foundIdiom = ''
-        for (let i = 2; i <= wordArr.length; ++i) {
-            const idiomPrefix = word.split(' ').slice(0, i).join(' ')
+        // let foundIdiom = ''
+        let hasSuggestion = false
+        let idiom = ''
+        for (let wordNum = 2; wordNum <= wordArr.length; ++wordNum) {
+            const idiomPrefix = word.split(' ').slice(0, wordNum).join(' ')
             const suggestionBaseUrl =
                 suggestionBase + encodeURIComponent(idiomPrefix)
             try {
@@ -64,13 +65,15 @@ class enen_TheFreeDictionary {
                     foundIdioms = []
                 }
                 if (foundIdioms.length === 0) {
-                    if (foundIdiom === '') {
+                    if (hasSuggestion === false) {
                         return []
                     } else {
+                        --wordNum
                         break
                     }
                 }
-                foundIdiom = foundIdioms[0][0].replace(/"/g, '')
+                hasSuggestion = true
+                idiom = idiomPrefix
             } catch (err) {
                 console.error(err)
                 return []
@@ -79,7 +82,7 @@ class enen_TheFreeDictionary {
 
         const base =
             'https://idioms.thefreedictionary.com/_/search.aspx?tab=1024&SearchBy=0&TFDBy=0&Word='
-        let url = base + encodeURIComponent(foundIdiom)
+        let url = base + encodeURIComponent(idiom)
         try {
             let data = await api.fetch(url)
             let parser = new DOMParser()
@@ -90,24 +93,24 @@ class enen_TheFreeDictionary {
         }
 
         const contentHolder = doc.querySelector('.content-holder')
-
         if (!contentHolder) return []
 
         const expression = contentHolder.querySelector('h1').textContent
 
         const section = contentHolder.querySelector('section[data-src]')
-        if (!section) return notes
+        if (!section) return []
 
         // make definition segement
         const definitions = []
         const defBlock = section.querySelector('.ds-single')
         let defBlocks
-
         if (!defBlock) {
             defBlocks = section.querySelectorAll('.ds-list')
         } else {
             defBlocks = [defBlock]
         }
+        if (defBlocks.length === 0) return []
+
         const pos = '<span class="pos">phrase</span>'
 
         for (const defBlock of defBlocks) {

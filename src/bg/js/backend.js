@@ -1,4 +1,4 @@
-/* global Ankiconnect, Ankiweb, Deinflector, Builtin, Agent, optionsLoad, optionsSave */
+/* global Ankiconnect, Ankiweb, Builtin, Agent, optionsLoad, optionsSave */
 class ODHBack {
     constructor() {
         this.options = null
@@ -8,8 +8,8 @@ class ODHBack {
         this.target = null
 
         //setup lemmatizer
-        this.deinflector = new Deinflector()
-        this.deinflector.loadData()
+        // this.deinflector = new Deinflector()
+        // this.deinflector.loadData()
 
         //Setup builtin dictionary data
         this.builtin = new Builtin()

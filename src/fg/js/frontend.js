@@ -38,6 +38,14 @@ class ODHFront {
         ) {
             const range = rangeFromPoint(this.point)
             if (range == null) return
+            const wordRegex = /[-|A-Z|a-z]/
+            if (
+                !wordRegex.test(
+                    range.commonAncestorContainer.textContent[range.startOffset]
+                )
+            ) {
+                return
+            }
             this.mousemoved = false
             this.onSelectionEnd(range)
         }
@@ -103,10 +111,17 @@ class ODHFront {
         if (idiomsResult == null || idiomsResult.length == 0) {
             this.notes = wordNotes
         } else {
+            const idiomTmp = idiomsResult[0].expression
+            idiomTmp.replace(/\(([^)]+)\)/g, 'word')
+            const count = (idiomTmp.match(/ /g) || []).length + 1
+            const textTmp = textSource.rng.commonAncestorContainer.textContent.slice(
+                textSource.rng.startOffset
+            )
+            const idiom = textTmp.split(' ').slice(0, count).join(' ')
+            
             textSource.rng.setEnd(
                 textSource.rng.endContainer,
-                // textSource.rng.startOffset + selectLength
-                textSource.rng.startOffset + idiomsResult[0].expression.length
+                textSource.rng.startOffset + idiom.length
             )
             textSource.selectText()
             const idiomsNotes = this.buildNote(idiomsResult)
@@ -154,7 +169,6 @@ class ODHFront {
     async api_addNote(params) {
         // let { nindex, dindex, context } = params;
         let { nindex } = params
-        // console.log(this.notes[nindex])
 
         let notedef = Object.assign({}, this.notes[nindex])
         // notedef.definition = this.notes[nindex].css + this.notes[nindex].definitions[dindex];

@@ -6,8 +6,6 @@
         "doc": "doc"
     },
     "scripts": {
-        "start": "webpack",
-        "build": "webpack --mode=production",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
@@ -21,18 +19,15 @@
     },
     "homepage": "https://github.com/cyj98/odh#readme",
     "devDependencies": {
-        "copy-webpack-plugin": "^6.0.3",
         "eslint": "^7.7.0",
         "eslint-plugin-no-unsanitized": "^3.1.2",
-        "prettier": "^2.0.5",
-        "terser-webpack-plugin": "^4.1.0",
-        "webpack": "^4.44.1",
-        "webpack-cli": "^3.3.12"
+        "prettier": "^2.0.5"
     },
     "prettier": {
         "trailingComma": "es5",
         "tabWidth": 4,
         "semi": false,
         "singleQuote": true
-    }
+    },
+    "dependencies": {}
 }

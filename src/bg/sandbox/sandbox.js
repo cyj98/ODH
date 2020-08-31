@@ -1,4 +1,4 @@
-/* global api */
+/* global nlp, api */
 class Sandbox {
     constructor() {
         this.dicts = {}
@@ -93,11 +93,21 @@ class Sandbox {
                 return
             }
         } else {
+            const verbNlp = nlp(expression).verbs()
+            if (verbNlp.json().length !== 0) {
+                expression = verbNlp.toInfinitive().text()
+            }
+            const nounNlp = nlp(expression).nouns()
+            if (nounNlp.json().length !== 0) {
+                expression = nounNlp.toSingular().text()
+            }
+            // console.log(expression)
+
             if (
                 this.dicts[this.current] &&
                 typeof this.dicts[this.current].findTerm === 'function'
             ) {
-                let notes = await this.dicts[this.current].findTerm(expression)
+                let notes = await this.dicts[this.current].findTerm(expression.toLowerCase())
                 api.callback(notes, callbackId)
                 return
             }

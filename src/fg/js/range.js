@@ -38,69 +38,37 @@ class TextSourceRange {
         return null
     }
 
-    isAlpha(char) {
-        // return /[\u002D|\u0041-\u005A|\u0061-\u007A|\u00A0-\u024F]/.test(char)
-        return /[-|A-Z|a-z|\u00A0-\u024F]/.test(char)
-    }
-
-    getStartPos(backwardcount) {
-        let clone = this.rng.cloneRange()
+    setStartOffset(backwardcount) {
         let pos = this.rng.startOffset
         let count = 0
-        let rangeText = ''
+        const text = this.rng.startContainer.textContent
+        const wordRegex = /[-|A-Z|a-z]/
 
         while (pos >= 1) {
-            clone.setStart(this.rng.startContainer, --pos)
-            rangeText = clone.toString()
-            count += this.isAlpha(rangeText.charAt(0)) ? 0 : 1
-            if (count == backwardcount) {
+            count += wordRegex.test(text[pos - 1]) ? 0 : 1
+            if (count === backwardcount) {
                 break
-            }
-        }
-        return pos
-    }
-
-    getEndPos(forwardcount) {
-        let clone = this.rng.cloneRange()
-        let pos = this.rng.endOffset
-        let count = 0
-        let rangeText = ''
-        const wordRegex = /[-|A-Z|a-z| ]/
-
-        while (pos < this.rng.endContainer.data.length) {
-            clone.setEnd(this.rng.endContainer, ++pos)
-            rangeText = clone.toString()
-
-            if (wordRegex.test(rangeText.charAt(rangeText.length - 1))) {
-                if (rangeText.charAt(rangeText.length - 1) === ' ') count += 1
-                if (count == forwardcount) {
-                    break
-                }
             } else {
-                count += 1
-                break
+                --pos
             }
-
-            // count += this.isAlpha(rangeText.charAt(rangeText.length - 1))
-            //     ? 0
-            //     : 1
-            // if (count == forwardcount) {
-            //     break
-            // }
         }
-        return pos
-    }
-
-    setStartOffset(backwardcount) {
-        let startPos = this.getStartPos(backwardcount)
-        if (startPos != 0) startPos++
-        this.rng.setStart(this.rng.startContainer, startPos)
+        this.rng.setStart(this.rng.startContainer, pos)
     }
 
     setEndOffset(forwardcount) {
-        let endPos = this.getEndPos(forwardcount)
-        if (endPos != this.rng.endContainer.data.length) endPos--
-        this.rng.setEnd(this.rng.endContainer, endPos)
+        let pos = this.rng.endOffset
+        let count = 0
+        const text = this.rng.endContainer.textContent
+        const wordRegex = /[-|A-Z|a-z]/
+
+        while (pos < text.length) {
+            count += wordRegex.test(text[pos + 1]) ? 0 : 1
+            ++pos
+            if (count === forwardcount) {
+                break
+            }
+        }
+        this.rng.setEnd(this.rng.endContainer, pos)
     }
 
     selectText() {
@@ -110,8 +78,8 @@ class TextSourceRange {
         selection.addRange(this.rng.cloneRange())
     }
 
-    deselect() {
-        const selection = window.getSelection()
-        selection.removeAllRanges()
-    }
+    // deselect() {
+    //     const selection = window.getSelection()
+    //     selection.removeAllRanges()
+    // }
 }
