@@ -100,15 +100,19 @@ class ODHFront {
         let textSource = new TextSourceRange(range)
         textSource.setWordRange(1, 1)
         if (isEmpty(textSource.text())) return
+        const word = textSource.text()
         textSource.selectText()
         const result = await getTranslation(textSource.text().split(' ')[0])
         if (result == null || result.length == 0) return
         const wordNotes = this.buildNote(result)
 
         textSource.setWordRange(1, 6)
-        const idiomsResult = await getTranslation(textSource.text())
+        let idiomsResult
+        if (textSource.text() !== word) {
+            idiomsResult = await getTranslation(textSource.text())
+        }
 
-        if (idiomsResult == null || idiomsResult.length == 0) {
+        if (!idiomsResult || (idiomsResult && idiomsResult.length == 0)) {
             this.notes = wordNotes
         } else {
             const idiomTmp = idiomsResult[0].expression
@@ -118,7 +122,7 @@ class ODHFront {
                 textSource.rng.startOffset
             )
             const idiom = textTmp.split(' ').slice(0, count).join(' ')
-            
+
             textSource.rng.setEnd(
                 textSource.rng.endContainer,
                 textSource.rng.startOffset + idiom.length

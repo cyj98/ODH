@@ -8,6 +8,7 @@ iframe#odh-popup {
     position: fixed;
     resize: both;
     visibility: hidden;
-    width: 400px;
+    /* width: 400px; */
+    width: 425px;
     z-index: 2147483647;
 }  

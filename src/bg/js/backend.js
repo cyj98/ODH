@@ -294,7 +294,7 @@ class ODHBack {
                 this.target = null
         }
 
-        let defaultscripts = ['builtin_encn_Collins']
+        let defaultscripts = ['builtin_encn_Collins', 'enen_TheFreeDictionary']
         let newscripts = `${options.sysscripts},${options.udfscripts}`
         let loadresults = null
         if (
@@ -321,7 +321,9 @@ class ODHBack {
             this.options.dictSelected = namelist.includes(options.dictSelected)
                 ? options.dictSelected
                 : namelist[0]
-            this.options.dictNamelist = loadresults.map((x) => x.result)
+            this.options.dictNamelist = loadresults
+                .map((x) => x.result)
+                .filter((x) => x.objectname != 'enen_TheFreeDictionary')
         }
         await this.setScriptsOptions(this.options)
         optionsSave(this.options)

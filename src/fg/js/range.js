@@ -38,12 +38,12 @@ class TextSourceRange {
         return null
     }
 
+    // backwardcount can only be 1 now
     setStartOffset(backwardcount) {
         let pos = this.rng.startOffset
         let count = 0
         const text = this.rng.startContainer.textContent
         const wordRegex = /[-|A-Z|a-z]/
-
         while (pos >= 1) {
             count += wordRegex.test(text[pos - 1]) ? 0 : 1
             if (count === backwardcount) {
@@ -57,13 +57,12 @@ class TextSourceRange {
 
     setEndOffset(forwardcount) {
         let pos = this.rng.endOffset
-        let count = 0
         const text = this.rng.endContainer.textContent
         const wordRegex = /[-|A-Z|a-z]/
-
-        while (pos < text.length) {
-            count += wordRegex.test(text[pos + 1]) ? 0 : 1
-            ++pos
+        const wordSpaceRegex = /[-|A-Z|a-z| ]/
+        let count = wordRegex.test(text[pos]) ? 0 : 1
+        while (wordSpaceRegex.test(text[pos]) && pos < text.length) {
+            count += text[++pos] === ' ' ? 1 : 0
             if (count === forwardcount) {
                 break
             }
