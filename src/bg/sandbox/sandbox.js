@@ -101,7 +101,6 @@ class Sandbox {
             if (nounNlp.json().length !== 0) {
                 expression = nounNlp.toSingular().text()
             }
-            // console.log(expression)
 
             if (
                 this.dicts[this.current] &&

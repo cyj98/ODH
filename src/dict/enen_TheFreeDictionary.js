@@ -49,13 +49,16 @@ class enen_TheFreeDictionary {
                 suggestionBase + encodeURIComponent(idiomPrefix)
             try {
                 let data = await api.fetch(suggestionBaseUrl)
-                // console.log(data)
+                if (!data) {
+                    console.error('no data')
+                    return []
+                }
                 let parser = new DOMParser()
                 doc = parser
                     .parseFromString(data, 'text/html')
                     .querySelector('body').textContent
                 if (!doc) {
-                    console.error(suggestionBaseUrl)
+                    console.error('no doc')
                     return []
                 }
                 let foundIdioms
