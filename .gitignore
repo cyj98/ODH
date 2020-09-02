@@ -24,5 +24,5 @@
 src/bg/data
 
 srcbak
-
+.DS_Store
 tmp

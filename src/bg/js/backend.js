@@ -421,7 +421,6 @@ class ODHBack {
         // api.callback({ name, result: null }, callbackId)
         try {
             let SCRIPT = eval(`(${scripttext})`)
-            console.log(SCRIPT)
             if (SCRIPT.name && typeof SCRIPT === 'function') {
                 let script = new SCRIPT()
                 //if (!this.dicts[SCRIPT.name])
@@ -501,7 +500,6 @@ class ODHBack {
                 // return
             }
         }
-        console.log(notes)
         return notes
         // api.callback(null, callbackId)
     }
