@@ -49,7 +49,6 @@ class enen_TheFreeDictionary {
                 suggestionBase + encodeURIComponent(idiomPrefix)
             try {
                 let data = await api.fetch(suggestionBaseUrl)
-                // console.log(data)
                 let parser = new DOMParser()
                 doc = parser
                     .parseFromString(data, 'text/html')

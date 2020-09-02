@@ -2,5 +2,6 @@
 node_modules
 
 src/lib
+src/bg/js/ankiweb.js
 
 *.min.js

@@ -10,6 +10,7 @@ async function isConnected() {
     try {
         return await sendtoBackend({ action: 'isConnected', params: {} })
     } catch (err) {
+        console.error(err)
         return null
     }
 }
@@ -21,6 +22,7 @@ async function getTranslation(expression) {
             params: { expression },
         })
     } catch (err) {
+        console.error(err)
         return null
     }
 }
@@ -29,17 +31,10 @@ async function addNote(notedef) {
     try {
         return await sendtoBackend({ action: 'addNote', params: { notedef } })
     } catch (err) {
+        console.error(err)
         return null
     }
 }
-
-// async function canAddNotes(notedef) {
-//     try {
-//         return await sendtoBackend({ action: 'canAddNotes', params: { notedef } });
-//     } catch (err) {
-//         return null;
-//     }
-// }
 
 async function findNotes(expression) {
     try {
@@ -60,6 +55,7 @@ async function guiBrowse(expression) {
             params: { expression },
         })
     } catch (err) {
+        console.error(err)
         return null
     }
 }

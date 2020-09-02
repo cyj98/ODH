@@ -54,13 +54,6 @@ class Ankiconnect {
         else return Promise.resolve(null)
     }
 
-    // async canAddNotes(notes) {
-    //     if (notes)
-    //         return await this.ankiInvoke('canAddNotes', { notes });
-    //     else
-    //         return Promise.resolve(null);
-    // }
-
     async findNotes(query) {
         if (query) return await this.ankiInvoke('findNotes', { query })
         else return Promise.resolve(null)

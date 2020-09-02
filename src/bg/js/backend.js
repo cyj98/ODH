@@ -1,4 +1,4 @@
-/* global Ankiconnect, Ankiweb, Builtin, Agent, optionsLoad, optionsSave */
+/* global nlp, Ankiconnect, Ankiweb, optionsLoad, optionsSave */
 class ODHBack {
     constructor() {
         this.options = null
@@ -7,18 +7,21 @@ class ODHBack {
         this.ankiweb = new Ankiweb()
         this.target = null
 
+        this.dicts = {}
+        this.current = null
+
         //setup lemmatizer
         // this.deinflector = new Deinflector()
         // this.deinflector.loadData()
 
         //Setup builtin dictionary data
-        this.builtin = new Builtin()
-        this.builtin.loadData()
+        // this.builtin = new Builtin()
+        // this.builtin.loadData()
 
-        this.agent = new Agent(document.getElementById('sandbox').contentWindow)
+        // this.agent = new Agent(document.getElementById('sandbox').contentWindow)
 
         chrome.runtime.onMessage.addListener(this.onMessage.bind(this))
-        window.addEventListener('message', (e) => this.onSandboxMessage(e))
+        // window.addEventListener('message', (e) => this.onSandboxMessage(e))
         chrome.runtime.onInstalled.addListener(this.onInstalled.bind(this))
         chrome.tabs.onCreated.addListener((tab) => this.onTabReady(tab.id))
         chrome.tabs.onUpdated.addListener(this.onTabReady.bind(this))
@@ -143,13 +146,13 @@ class ODHBack {
         return true
     }
 
-    onSandboxMessage(e) {
-        const { action, params } = e.data
-        const method = this['api_' + action]
-        if (typeof method === 'function') method.call(this, params)
-    }
+    // onSandboxMessage(e) {
+    //     const { action, params } = e.data
+    //     const method = this['api_' + action]
+    //     if (typeof method === 'function') method.call(this, params)
+    // }
 
-    async api_initBackend() {
+    async initBackend() {
         let options = await optionsLoad()
         this.ankiweb.initConnection(options)
 
@@ -159,39 +162,58 @@ class ODHBack {
             options.sysscripts = options.dictLibrary
             options.dictLibrary = ''
         }
-        this.opt_optionsChanged(options)
+        this.opt_optionsChanged(options).catch((err) => {
+            console.error(err)
+        })
     }
 
-    async api_Fetch(params) {
-        let { url, callbackId } = params
-
-        let request = {
-            url,
-            type: 'GET',
-            dataType: 'text',
-            timeout: 3000,
-            // error: (xhr, status, error) => this.callback(null, callbackId),
-            // success: (data, status) => this.callback(data, callbackId),
-            error: () => this.callback(null, callbackId),
-            success: (data) => this.callback(data, callbackId),
-        }
-        $.ajax(request)
+    async fetch(url) {
+        const response = await fetch(url, {
+            method: 'GET', // *GET, POST, PUT, DELETE, etc.
+            mode: 'cors', // no-cors, *cors, same-origin
+            cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+            credentials: 'same-origin', // include, *same-origin, omit
+            headers: {
+                'Content-Type': 'application/text',
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            redirect: 'follow', // manual, *follow, error
+            referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            // body: JSON.stringify(data), // body data type must match "Content-Type" header
+        })
+        return response.text()
     }
 
-    async api_Deinflect(params) {
-        let { word, callbackId } = params
-        this.callback(this.deinflector.deinflect(word), callbackId)
-    }
+    // async api_Fetch(params) {
+    //     let { url, callbackId } = params
 
-    async api_getBuiltin(params) {
-        let { dict, word, callbackId } = params
-        this.callback(this.builtin.findTerm(dict, word), callbackId)
-    }
+    //     let request = {
+    //         url,
+    //         type: 'GET',
+    //         dataType: 'text',
+    //         timeout: 3000,
+    //         // error: (xhr, status, error) => this.callback(null, callbackId),
+    //         // success: (data, status) => this.callback(data, callbackId),
+    //         error: () => this.callback(null, callbackId),
+    //         success: (data) => this.callback(data, callbackId),
+    //     }
+    //     $.ajax(request)
+    // }
 
-    async api_getLocale(params) {
-        let { callbackId } = params
-        this.callback(chrome.i18n.getUILanguage(), callbackId)
-    }
+    // async api_Deinflect(params) {
+    //     let { word, callbackId } = params
+    //     this.callback(this.deinflector.deinflect(word), callbackId)
+    // }
+
+    // async api_getBuiltin(params) {
+    //     let { dict, word, callbackId } = params
+    //     this.callback(this.builtin.findTerm(dict, word), callbackId)
+    // }
+
+    // async api_getLocale(params) {
+    //     let { callbackId } = params
+    //     this.callback(chrome.i18n.getUILanguage(), callbackId)
+    // }
 
     // front end message handler
     async api_isConnected(params) {
@@ -228,19 +250,6 @@ class ODHBack {
             callback(null)
         }
     }
-
-    // async api_canAddNotes(params) {
-    //     let { notedef, callback } = params;
-
-    //     const note = this.formatNote(notedef);
-    //     try {
-    //         let result = await this.target.canAddNotes([note]);
-    //         callback(result);
-    //     } catch (err) {
-    //         console.error(err);
-    //         callback(null);
-    //     }
-    // }
 
     async api_findNotes(params) {
         let { expression, callback } = params
@@ -357,33 +366,156 @@ class ODHBack {
         })
     }
 
-    async loadScript(name) {
-        return new Promise((resolve) => {
-            this.agent.postMessage('loadScript', { name }, (result) =>
-                resolve(result)
-            )
-        })
+    // async loadScript(name) {
+    //     return new Promise((resolve) => {
+    //         window.parent.postMessage('loadScript', { name }, (result) =>
+    //             resolve(result)
+    //         )
+    //     })
+    // }
+
+    // async setScriptsOptions(options) {
+    //     return new Promise((resolve) => {
+    //         window.parent.postMessage('setScriptsOptions', { options }, (result) =>
+    //             resolve(result)
+    //         )
+    //     })
+    // }
+
+    // async findTerm(expression) {
+    //     return new Promise((resolve) => {
+    //         window.parent.postMessage('findTerm', { expression }, (result) =>
+    //             resolve(result)
+    //         )
+    //     })
+    // }
+
+    buildScriptURL(name) {
+        let gitbase =
+            'https://raw.githubusercontent.com/cyj98/odh/master/src/dict/'
+        let url = name
+
+        //build remote script url with gitbase(https://) if prefix lib:// existing.
+        url =
+            url.indexOf('lib://') != -1
+                ? gitbase + url.replace('lib://', '')
+                : url
+
+        //use local script if nothing specified in URL prefix.
+        if (url.indexOf('https://') == -1 && url.indexOf('http://') == -1) {
+            url = '/dict/' + url
+        }
+        //add .js suffix if missing.
+        url = url.indexOf('.js') == -1 ? url + '.js' : url
+        return url
     }
 
-    async setScriptsOptions(options) {
-        return new Promise((resolve) => {
-            this.agent.postMessage('setScriptsOptions', { options }, (result) =>
-                resolve(result)
-            )
-        })
+    async loadScript(name) {
+        // let { name, callbackId } = params
+
+        // let scripttext = await api.fetch(this.buildScriptURL(name))
+        let scripttext = await this.fetch(this.buildScriptURL(name))
+        if (!scripttext) {
+            return { name, result: null }
+        }
+        // api.callback({ name, result: null }, callbackId)
+        try {
+            let SCRIPT = eval(`(${scripttext})`)
+            console.log(SCRIPT)
+            if (SCRIPT.name && typeof SCRIPT === 'function') {
+                let script = new SCRIPT()
+                //if (!this.dicts[SCRIPT.name])
+                this.dicts[SCRIPT.name] = script
+                let displayname =
+                    typeof script.displayName === 'function'
+                        ? await script.displayName()
+                        : SCRIPT.name
+                return {
+                    name,
+                    result: { objectname: SCRIPT.name, displayname },
+                }
+                // api.callback(
+                //     { name, result: { objectname: SCRIPT.name, displayname } },
+                //     callbackId
+                // )
+            }
+        } catch (err) {
+            console.error(err)
+            return { name, result: null }
+            // api.callback({ name, result: null }, callbackId)
+            // return
+        }
+    }
+
+    setScriptsOptions(options) {
+        // let { options, callbackId } = params
+        for (const dictionary of Object.values(this.dicts)) {
+            if (typeof dictionary.setOptions === 'function')
+                dictionary.setOptions(options)
+        }
+
+        let selected = options.dictSelected
+        if (this.dicts[selected]) {
+            this.current = selected
+            // api.callback(selected, callbackId)
+            // return
+            return selected
+        }
+        // return
+        // api.callback(null, callbackId)
     }
 
     async findTerm(expression) {
-        return new Promise((resolve) => {
-            this.agent.postMessage('findTerm', { expression }, (result) =>
-                resolve(result)
-            )
-        })
+        // let { expression, callbackId } = params
+
+        let notes
+        if (expression.indexOf(' ') > -1) {
+            if (
+                this.dicts.enen_TheFreeDictionary &&
+                typeof this.dicts.enen_TheFreeDictionary.findTerm === 'function'
+            ) {
+                notes = await this.dicts.enen_TheFreeDictionary.findTerm(
+                    expression
+                )
+                // api.callback(notes, callbackId)
+                // return
+            }
+        } else {
+            const verbNlp = nlp(expression).verbs()
+            if (verbNlp.json().length !== 0) {
+                expression = verbNlp.toInfinitive().text()
+            }
+            const nounNlp = nlp(expression).nouns()
+            if (nounNlp.json().length !== 0) {
+                expression = nounNlp.toSingular().text()
+            }
+
+            if (
+                this.dicts[this.current] &&
+                typeof this.dicts[this.current].findTerm === 'function'
+            ) {
+                notes = await this.dicts[this.current].findTerm(
+                    expression.toLowerCase()
+                )
+                // api.callback(notes, callbackId)
+                // return
+            }
+        }
+        console.log(notes)
+        return notes
+        // api.callback(null, callbackId)
     }
 
-    callback(data, callbackId) {
-        this.agent.postMessage('callback', { data, callbackId })
-    }
+    // callback(data, callbackId) {
+    //     window.parent.postMessage('callback', { data, callbackId })
+    // }
 }
 
 window.odhback = new ODHBack()
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+        window.odhback.initBackend()
+    },
+    false
+)

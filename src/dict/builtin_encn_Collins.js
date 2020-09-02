@@ -49,6 +49,7 @@ class builtin_encn_Collins {
         try {
             result = JSON.parse(await api.getBuiltin('collins', word))
         } catch (err) {
+            console.error(err)
             return []
         }
 

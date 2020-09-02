@@ -19,20 +19,25 @@ class encn_LDOCE6MDX {
         //this.maxexample = options.maxexample;
     }
 
+    // async findTerm(word) {
+    //     this.word = word;
+    //     let list = [];
+    //     let word_stem = await api.deinflect(word);
+    //     if (word.toLowerCase() != word) {
+    //         let lowercase = word.toLowerCase();
+    //         let lowercase_stem = await api.deinflect(lowercase);
+    //         list = [word, word_stem, lowercase, lowercase_stem];
+    //     } else {
+    //         list = [word, word_stem];
+    //     }
+    //     let promises = list.map((item) => this.findLDOCE6(item));
+    //     let results = await Promise.all(promises);
+    //     return [].concat(...results).filter(x => x);
+    // }
     async findTerm(word) {
-        this.word = word;
-        let list = [];
-        let word_stem = await api.deinflect(word);
-        if (word.toLowerCase() != word) {
-            let lowercase = word.toLowerCase();
-            let lowercase_stem = await api.deinflect(lowercase);
-            list = [word, word_stem, lowercase, lowercase_stem];
-        } else {
-            list = [word, word_stem];
-        }
-        let promises = list.map((item) => this.findLDOCE6(item));
-        let results = await Promise.all(promises);
-        return [].concat(...results).filter(x => x);
+        this.word = word
+        let results = await Promise.all([this.findLDOCE6(word)])
+        return [].concat(...results).filter((x) => x)
     }
 
     async findLDOCE6(word) {

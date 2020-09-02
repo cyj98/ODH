@@ -1,15 +1,15 @@
 class Builtin {
     constructor() {
-        this.dicts = {};
+        this.dicts = {}
     }
 
     async loadData() {
-        this.dicts['collins'] = await Builtin.loadData('data/collins.json');
+        this.dicts['collins'] = await Builtin.loadData('data/collins.json')
     }
 
     findTerm(dictname, term) {
-        const dict = this.dicts[dictname];
-        return dict.hasOwnProperty(term) ? JSON.stringify(dict[term]):null;
+        const dict = this.dicts[dictname]
+        return dict.hasOwnProperty(term) ? JSON.stringify(dict[term]) : null
     }
 
     static async loadData(path) {
@@ -20,10 +20,9 @@ class Builtin {
                 dataType: 'json',
                 timeout: 5000,
                 error: (xhr, status, error) => reject(error),
-                success: (data, status) => resolve(data)
-            };
-            $.ajax(request);
-        });
+                success: (data) => resolve(data),
+            }
+            $.ajax(request)
+        })
     }
-    
 }
