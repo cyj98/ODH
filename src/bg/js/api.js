@@ -1,73 +1,38 @@
-// /*global Agent */
-/* global Builtin */
-// class SandboxAPI {
+/* global Builtin, BuiltinIdioms  */
 class backendAPI {
-    constructor() {
-        this.builtin = new Builtin()
-        this.builtin.loadData()
-        // this.agent = new Agent(window.parent)
-    }
+  constructor() {
+    this.builtin = new Builtin();
+    this.builtin.loadData();
+    this.builtinIdioms = new BuiltinIdioms();
+    this.builtinIdioms.loadData();
+  }
 
-    // async postMessage(action, params) {
-    //     return new Promise((resolve, reject) => {
-    //         try {
-    //             // this.agent.postMessage(action, params, (result) =>
-    //             //     resolve(result)
-    //             // )
-    //             window.parent.postMessage(action, params, (result) =>
-    //                 resolve(result)
-    //             )
-    //         } catch (err) {
-    //             console.error(err)
-    //             reject(null)
-    //         }
-    //     })
-    // }
+  async fetch(url) {
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/text',
+      },
+      redirect: 'follow',
+      referrerPolicy: 'no-referrer',
+    });
+    return response.text();
+  }
 
-    // async deinflect(word) {
-    //     return await this.postMessage('Deinflect', { word })
-    // }
+  async getBuiltin(dict, word) {
+    return this.builtin.findTerm(dict, word);
+  }
 
-    async fetch(url) {
-        const response = await fetch(url, {
-            method: 'GET',
-            mode: 'cors',
-            cache: 'no-cache',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/text',
-            },
-            redirect: 'follow',
-            referrerPolicy: 'no-referrer',
-        })
-        return response.text()
-    }
+  async getBuiltinIdioms(dict, word) {
+    return this.builtinIdioms.findTerm(dict, word);
+  }
 
-    async getBuiltin(dict, word) {
-        return this.builtin.getBuiltin(dict, word)
-        // return await this.postMessage('getBuiltin', { dict, word })
-    }
-
-    // async getCollins(word) {
-    // return await this.postMessage('getCollins', { word })
-    // }
-
-    // async getOxford(word) {
-    // return await this.postMessage('getOxford', { word })
-    // }
-
-    async locale() {
-        return chrome.i18n.getUILanguage()
-        // return await this.postMessage('getLocale', {})
-    }
-
-    // callback(data, callbackId) {
-    //     this.postMessage('callback', { data, callbackId })
-    // }
-
-    // initBackend() {
-    //     this.postMessage('initBackend', {})
-    // }
+  async locale() {
+    return chrome.i18n.getUILanguage();
+  }
 }
 
-window.api = new backendAPI()
+window.api = new backendAPI();

@@ -45,7 +45,7 @@
         "https://ankiuser.net/*",
         "storage"
     ],
-    "content_security_policy": "object-src 'self'; script-src 'self' 'unsafe-eval';",
+    "content_security_policy": "object-src 'self'; script-src 'self' 'unsafe-eval'",
     "web_accessible_resources": [
         "fg/css/frame.css",
         "fg/js/frame.js",
