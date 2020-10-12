@@ -38,7 +38,7 @@ class ODHFront {
     ) {
       const range = rangeFromPoint(this.point);
       if (range == null) return;
-      const wordRegex = /[-|A-Z|a-z]/;
+      const wordRegex = /[-A-Za-z']/;
       if (!wordRegex.test(range.commonAncestorContainer.textContent[range.startOffset])) {
         return;
       }
@@ -78,30 +78,31 @@ class ODHFront {
     this.timeout = null;
 
     let textSource = new TextSourceRange(range);
-    textSource.setWordRange(1, 1);
+    textSource.setWordRange(1);
     if (isEmpty(textSource.text())) return;
-    const word = textSource.text();
+    const word = textSource.text().trim();
     textSource.selectText();
     const result = await getTranslation(textSource.text().split(' ')[0]);
     if (result == null || result.length == 0) return;
     const wordNotes = this.buildNote(result);
 
-    textSource.setWordRange(1, 6);
+    textSource.setWordRange(8);
     let idiomsResult;
-    if (textSource.text() !== word) {
-      idiomsResult = await getTranslation(textSource.text());
+    const textToSearchIdiom = textSource.text().trim();
+    if (textToSearchIdiom !== word) {
+      idiomsResult = await getTranslation(textToSearchIdiom);
     }
 
     if (!idiomsResult || (idiomsResult && idiomsResult.length == 0)) {
       this.notes = wordNotes;
     } else {
-      const idiomTmp = idiomsResult[0].expression;
-      idiomTmp.replace(/\(([^)]+)\)/g, 'word');
-      const count = (idiomTmp.match(/ /g) || []).length + 1;
-      const textTmp = textSource.rng.commonAncestorContainer.textContent.slice(
-        textSource.rng.startOffset,
-      );
-      const idiom = textTmp.split(' ').slice(0, count).join(' ');
+      const idiom = idiomsResult[0].matchWord;
+      // idiomTmp.replace(/\(([^)]+)\)/g, '');
+      // const count = (idiomTmp.match(/ /g) || []).length;
+      // const textTmp = textSource.rng.commonAncestorContainer.textContent.slice(
+      //   textSource.rng.startOffset,
+      // );
+      // const idiom = textTmp.split(' ').slice(0, count).join(' ');
 
       textSource.rng.setEnd(textSource.rng.endContainer, textSource.rng.startOffset + idiom.length);
       textSource.selectText();
@@ -225,17 +226,21 @@ class ODHFront {
   }
 
   async renderPopup(notes) {
-    let content = '';
+     let content = '';
 
     for (const [nindex, note] of notes.entries()) {
-      let response = await findNotes(this.notes[nindex].expression);
+      const connected = await isConnected()
+      let response
+      if (connected) {
+        response = await findNotes(this.notes[nindex].expression);
+      }
 
       let services = this.options ? this.options.services : '';
       let image = '';
       let imageclass = '';
       if (services != 'none') {
-        imageclass = (await isConnected()) ? 'class="odh-addnote"' : 'class="odh-addnote-disabled"';
-        if (services === 'ankiconnect') {
+        imageclass = connected ? 'class="odh-addnote"' : 'class="odh-addnote-disabled"';
+        if (services === 'ankiconnect') { 
           if (response && response[0]) {
             image = 'good.png';
             imageclass = 'class="odh-addnote-disabled"';

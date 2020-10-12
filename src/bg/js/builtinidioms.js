@@ -4,33 +4,41 @@ const matchExact = (r, str) => {
   return match && str === match[0];
 };
 const countWordNum = (str) => (str.match(/ /g) || []).length + 1;
-const checkMatch = (idiomWord, word, tags) => {
+const checkMatch = (idiomWord, word, tags, nounIndex, wordIndex) => {
   if (idiomWord !== word) {
     switch (idiomWord) {
       case 'oneself':
-        return word.endsWith('self');
+        return word.endsWith('self') ? wordIndex : 0;
       case 'somebody':
-        return (
-          matchExact(/sb.?|somebody|someone|one/, word) ||
+        return matchExact(/sb.?|somebody|someone|one/, word) ||
           tags.indexOf('Person') !== -1 ||
           (tags.indexOf('Pronoun') !== -1 && word !== 'it')
-        );
+          ? wordIndex
+          : -1;
       case `somebody's`:
-        return tags.indexOf('Singular') !== -1 && tags.indexOf('Possessive') !== -1;
+        return tags.indexOf('Singular') !== -1 && tags.indexOf('Possessive') !== -1
+          ? wordIndex
+          : -1;
       case 'something':
-        return (
-          matchExact(/sth.?|something|it/, word) ||
-          (tags.indexOf('Noun') !== -1 &&
-            tags.indexOf('Person') === -1 &&
-            tags.indexOf('Pronoun') === -1)
-        );
+        if (nounIndex) {
+          return nounIndex;
+        } else {
+          return matchExact(/sth.?|something|it/, word) ||
+            (tags.indexOf('Noun') !== -1 &&
+              tags.indexOf('Person') === -1 &&
+              tags.indexOf('Pronoun') === -1)
+            ? wordIndex
+            : -1;
+        }
       case `something's`:
-        return tags.indexOf('Singular') === -1 && tags.indexOf('Possessive') !== -1;
+        return tags.indexOf('Singular') === -1 && tags.indexOf('Possessive') !== -1
+          ? wordIndex
+          : -1;
       default:
-        return false;
+        return -1;
     }
   }
-  return true;
+  return wordIndex;
 };
 
 class BuiltinIdioms {
@@ -44,33 +52,54 @@ class BuiltinIdioms {
 
   findTerm(dictname, originalWord) {
     const dict = this.dicts[dictname];
-    // console.time('dict');
-    let lowercaseWord = originalWord.toLowerCase();
-    const wordNlp = nlp(lowercaseWord);
-    const wordTagsTmp = wordNlp.out('tags');
-    const wordTags = Object.values(wordTagsTmp[0]);
+    const wordNlp = nlp(originalWord.toLowerCase().trim().replace(`’`, `'`)).contract();
+    const lowercaseWord = wordNlp.text();
+
+    const wordTags = [];
+    wordNlp.json()[0].terms.forEach((obj) => {
+      if (obj.text) {
+        wordTags.push(obj.tags);
+      }
+    });
+    const nounIndexObj = {};
+    let adjIndex = -1;
+    const wordArrTmp = lowercaseWord.split(' ');
+    wordTags.forEach((tags, index) => {
+      const hasAdj = tags.some(
+        // because compromise will recognize self as Possessive
+        (tag) =>
+          tag.match(/Possessive|Adjective|Determiner/) && !wordArrTmp[index].endsWith('self'),
+      );
+      if (hasAdj && adjIndex === -1) {
+        adjIndex = index;
+      } else if (!hasAdj && adjIndex !== -1) {
+        const hasNoun = tags.some((tag) => tag === 'Noun');
+        if (hasNoun) {
+          nounIndexObj[adjIndex] = index;
+        }
+        adjIndex = -1;
+      }
+    });
+
     let infinitiveWord = '';
     let singularWord = '';
     let singularInfinitiveWord = '';
-    if (!lowercaseWord.match(/(she's|he's)/)) {
-      if (
-        wordTags.some((tags) => tags.indexOf('Verb') !== -1 && tags.indexOf('Infinitive') === -1)
-      ) {
-        infinitiveWord = wordNlp.verbs().toInfinitive().all().contract().text();
-      }
-      if (wordTags.some((tags) => tags.indexOf('Noun') !== -1 && tags.indexOf('Plural') !== -1)) {
-        singularWord = wordNlp.nouns().toSingular().all().contract().text();
-        if (infinitiveWord) {
-          singularInfinitiveWord = nlp(infinitiveWord).nouns().toSingular().all().contract().text();
-        }
-      }
-      lowercaseWord = wordNlp.contract().text();
+    let infinitiveWordNlp;
+    if (wordTags.some((tags) => tags.indexOf('Verb') !== -1 && tags.indexOf('Infinitive') === -1)) {
+      infinitiveWordNlp = nlp(lowercaseWord).verbs().toInfinitive().all();
+      infinitiveWord = infinitiveWordNlp.text();
     }
-    // console.log(originalWord, lowercaseWord, infinitiveWord, singularWord, singularInfinitiveWord);
+    if (wordTags.some((tags) => tags.indexOf('Noun') !== -1 && tags.indexOf('Plural') !== -1)) {
+      singularWord = wordNlp.nouns().toSingular().all().text();
+      if (infinitiveWord) {
+        singularInfinitiveWord = infinitiveWordNlp.nouns().toSingular().all().text();
+      }
+    }
     const descreaseWordNum = countWordNum(originalWord) - countWordNum(lowercaseWord);
 
     let foundIdiom = '';
     let formattedWord = '';
+    let foundWordIndex = -1;
     Object.keys(dict).forEach((idiom) => {
       let toInfinitiveWord =
         infinitiveWord && Object.values(dict[idiom].inflection).indexOf('NotInfinitive') === -1;
@@ -101,15 +130,15 @@ class BuiltinIdioms {
       const wordArr = formattedWord.split(' ');
       let idiomArr = idiom.split(' ');
 
-      let isIdiomMatch = false;
       let leftParenthesisIndex = -1;
+      let wordIndex = 0;
+      let newWordIndex = -1;
 
       for (let i = 0; i < idiomArr.length; ++i) {
-        // if (originalIdiom === `one, etc. in a million`)
-        // console.log(formattedWord, ':', i, idiom, isIdiomMatch);
+        // if (originalIdiom === `make (someone, something, or oneself) a laughingstock`)
         if (wordArr.length < i + 1) {
           if (idiomArr[wordArr.length][0] !== '(' || idiom.indexOf(')') !== idiom.length - 1) {
-            isIdiomMatch = false;
+            newWordIndex = -1;
           }
           break;
         }
@@ -117,33 +146,56 @@ class BuiltinIdioms {
         idiomArr[i] = idiomArr[i].replace(/[()]/g, '');
 
         if (idiomArr[i].indexOf('/') !== -1) {
-          isIdiomMatch = idiomArr[i]
-            .split('/')
-            .some((newIdiom) => checkMatch(newIdiom, wordArr[i], wordTags[i]));
+          idiomArr[i].split('/').some((newIdiom) => {
+            newWordIndex = checkMatch(
+              newIdiom,
+              wordArr[wordIndex],
+              wordTags[wordIndex],
+              nounIndexObj[wordIndex],
+              wordIndex,
+            );
+            return newWordIndex !== -1;
+          });
         } else {
-          isIdiomMatch = checkMatch(idiomArr[i], wordArr[i], wordTags[i]);
+          newWordIndex = checkMatch(
+            idiomArr[i],
+            wordArr[wordIndex],
+            wordTags[wordIndex],
+            nounIndexObj[wordIndex],
+            wordIndex,
+          );
         }
-        if (isIdiomMatch === false) {
+        if (newWordIndex === -1) {
           if (leftParenthesisIndex !== -1 && leftParenthesisIndex <= i) {
             idiom = idiom.replace(/ *\([^)]*\)/, '');
             idiomArr = idiom.split(' ');
+            const originalIdx = i;
             i = leftParenthesisIndex - 1;
+            wordIndex -= originalIdx - i;
             leftParenthesisIndex = -1;
           } else {
             break;
           }
+        } else {
+          wordIndex = newWordIndex;
         }
+        ++wordIndex;
       }
-      if (isIdiomMatch) {
+      if (newWordIndex !== -1) {
         // check for less word num for idioms with parentheses
-        foundIdiom = countWordNum(idiom) > countWordNum(foundIdiom) ? originalIdiom : foundIdiom;
+        if (countWordNum(idiom) > countWordNum(foundIdiom)) {
+          foundIdiom = originalIdiom;
+          foundWordIndex = wordIndex;
+        }
       }
     });
 
-    const matchWordNum = countWordNum(lowercaseWord) + descreaseWordNum;
-    const matchWord = originalWord.split(' ').slice(0, matchWordNum).join(' ');
-    return JSON.stringify({ matchWord, defs: dict[foundIdiom].defs });
-    // console.log(originalWord, matchWord, foundIdiom);
+    if (foundIdiom) {
+      const matchWordNum = foundWordIndex + descreaseWordNum;
+      const matchWord = originalWord.split(' ').slice(0, matchWordNum).join(' ');
+      return JSON.stringify({ foundIdiom, matchWord, sections: dict[foundIdiom].sections });
+    }
+    return null;
   }
 
   static async loadData(path) {

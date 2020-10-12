@@ -32,12 +32,12 @@ class ODHBack {
       });
       return;
     }
-    if (details.reason === 'update') {
-      chrome.tabs.create({
-        url: chrome.extension.getURL('bg/update.html'),
-      });
-      return;
-    }
+    // if (details.reason === 'update') {
+    //   chrome.tabs.create({
+    //     url: chrome.extension.getURL('bg/update.html'),
+    //   });
+    //   return;
+    // }
   }
 
   onTabReady(tabId) {
@@ -203,7 +203,7 @@ class ODHBack {
   async api_findNotes(params) {
     let { expression, callback } = params;
     let options = this.options;
-    if (!options.deckname || !options.typename || !options.expression) return null;
+    if (!options.deckname || !options.typename || !options.expression) callback(null);
 
     try {
       let result = await this.target.findNotes(
@@ -375,6 +375,7 @@ class ODHBack {
     // let { expression, callbackId } = params
 
     let notes;
+    expression = expression.toLowerCase().replace(/[’']/g, `'`);
     if (expression.indexOf(' ') > -1) {
       if (
         this.dicts.builtin_enen_TheFreeDictionary &&
@@ -385,13 +386,14 @@ class ODHBack {
         // return
       }
     } else {
-      const verbNlp = nlp(expression).verbs();
-      if (verbNlp.json().length !== 0) {
-        expression = verbNlp.toInfinitive().text();
+      const wordNlp = nlp(expression);
+      const tagsTmp = wordNlp.out('tags')[0];
+      const tags = Object.values(tagsTmp)[0];
+      if (tags.indexOf('Verb') !== -1 && tags.indexOf('Infinitive') === -1) {
+        expression = wordNlp.verbs().toInfinitive().all().text();
       }
-      const nounNlp = nlp(expression).nouns();
-      if (nounNlp.json().length !== 0) {
-        expression = nounNlp.toSingular().text();
+      if (tags.indexOf('Noun') !== -1 && tags.indexOf('Plural') !== -1) {
+        expression = wordNlp.nouns().toSingular().all().text();
       }
 
       if (this.dicts[this.current] && typeof this.dicts[this.current].findTerm === 'function') {

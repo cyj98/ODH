@@ -1,4 +1,5 @@
 /* global api */
+
 class builtin_enen_TheFreeDictionary {
   constructor(options) {
     this.options = options;
@@ -25,6 +26,18 @@ class builtin_enen_TheFreeDictionary {
   }
 
   async findTheFreeDictionaryIdioms(word) {
+    const dataSrcObj = {
+      FarlexIdi: `Farlex Dictionary of Idioms.`,
+      MGH_Slang: `McGraw-Hill's Dictionary of American Slang and Colloquial Expressions.`,
+      MGH_Idi: `McGraw-Hill Dictionary of American Idioms and Phrasal Verbs.`,
+      HM_Idi: `The American Heritage® Dictionary of Idioms.`,
+      hm: `American Heritage® Dictionary of the English Language, Fifth Edition.`,
+      shCliches: `The Dictionary of Clichés.`,
+      HC_Idioms: `Collins COBUILD Idioms Dictionary, 3rd ed.`,
+      OxfEngIdi: `Farlex Partner Idioms Dictionary.`,
+      OxfIdiLeaner: `Farlex Partner Idioms Dictionary.`,
+    };
+
     let notes = [];
     if (!word) return notes;
     let result = {};
@@ -34,38 +47,41 @@ class builtin_enen_TheFreeDictionary {
       console.error(err);
       return [];
     }
-    console.log(result);
 
     // //get Collins Data
     if (!result) return notes;
 
-    let expression = result.matchWord;
-    let defs = result.defs;
-    console.log(defs);
+    const sections = result.sections;
 
-    const pos = '<span class="pos">phrase</span>';
     const definitions = [];
 
-    for (const def of defs) {
-      const eng_tran = `<span class='eng_tran'>${def.def_en}</span>`;
-      let definition = `${pos}<span class='tran'>${eng_tran}</span>`;
-      const examps = def.examp;
+    sections.forEach((section) => {
+      const pos = `<span class="pos">${dataSrcObj[section.dataSrc]}</span>`;
+      // const pos = `<span class="pos">${section.dataSrc}</span>`;
+      section.defs.forEach((def) => {
+        const eng_tran = `<span class='eng_tran'>${def.def_en}</span>`;
+        let definition = `${pos}<span class='tran'>${eng_tran}</span>`;
+        const examps = def.examp;
 
-      // make exmaple segement
-      if (examps.length > 0) {
-        definition += '<ul class="sents">';
-        for (const [index, examp] of examps.entries()) {
-          if (index > this.maxexample - 1) break; // to control only 2 example sentence.
-          definition += examp ? `<li class='sent'><span class='eng_sent'>${examp}</span></li>` : '';
+        // make exmaple segement
+        if (examps.length > 0) {
+          definition += '<ul class="sents">';
+          for (const [index, examp] of examps.entries()) {
+            if (index > this.maxexample - 1) break; // to control only 2 example sentence.
+            definition += examp
+              ? `<li class='sent'><span class='eng_sent'>${examp}</span></li>`
+              : '';
+          }
+          definition += '</ul>';
         }
-        definition += '</ul>';
-      }
-      definition && definitions.push(definition);
-    }
+        definition && definitions.push(definition);
+      });
+    });
     let css = this.renderCSS();
     notes.push({
       css,
-      expression,
+      expression: result.foundIdiom,
+      matchWord: result.matchWord,
       definitions,
     });
     return notes;
