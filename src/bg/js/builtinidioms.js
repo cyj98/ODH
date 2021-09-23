@@ -8,7 +8,7 @@ const checkMatch = (idiomWord, word, tags, nounIndex, wordIndex) => {
   if (idiomWord !== word) {
     switch (idiomWord) {
       case 'oneself':
-        return word.endsWith('self') ? wordIndex : 0;
+        return word.endsWith('self') ? wordIndex : -1;
       case 'somebody':
         return matchExact(/sb.?|somebody|someone|one/, word) ||
           tags.indexOf('Person') !== -1 ||

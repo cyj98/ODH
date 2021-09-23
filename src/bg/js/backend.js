@@ -374,6 +374,7 @@ class ODHBack {
   async findTerm(expression) {
     // let { expression, callbackId } = params
 
+    // const notes = notes;
     let notes;
     expression = expression.toLowerCase().replace(/[’']/g, `'`);
     if (expression.indexOf(' ') > -1) {
@@ -381,22 +382,31 @@ class ODHBack {
         this.dicts.builtin_enen_TheFreeDictionary &&
         typeof this.dicts.builtin_enen_TheFreeDictionary.findTerm === 'function'
       ) {
-        notes = await this.dicts.builtin_enen_TheFreeDictionary.findTerm(expression);
-        // api.callback(notes, callbackId)
-        // return
+        return [];
       }
+      notes = await this.dicts.builtin_enen_TheFreeDictionary.findTerm(expression);
+      // api.callback(notes, callbackId)
+      // return
     } else {
-      const wordNlp = nlp(expression);
-      const tagsTmp = wordNlp.out('tags')[0];
-      const tags = Object.values(tagsTmp)[0];
-      if (tags.indexOf('Verb') !== -1 && tags.indexOf('Infinitive') === -1) {
-        expression = wordNlp.verbs().toInfinitive().all().text();
+      if (!this.dicts[this.current] || typeof this.dicts[this.current].findTerm !== 'function') {
+        return [];
       }
-      if (tags.indexOf('Noun') !== -1 && tags.indexOf('Plural') !== -1) {
-        expression = wordNlp.nouns().toSingular().all().text();
-      }
-
-      if (this.dicts[this.current] && typeof this.dicts[this.current].findTerm === 'function') {
+      notes = await this.dicts[this.current].findTerm(expression.toLowerCase());
+      if (Array.isArray(notes) && notes.length === 0) {
+        if (expression.includes("'")) {
+          return await this.dicts[this.current].findTerm(
+            expression.substring(0, expression.indexOf("'")).toLowerCase(),
+          );
+        }
+        const wordNlp = nlp(expression);
+        const tagsTmp = wordNlp.out('tags')[0];
+        const tags = Object.values(tagsTmp)[0];
+        if (tags.indexOf('Verb') !== -1 && tags.indexOf('Infinitive') === -1) {
+          expression = wordNlp.verbs().toInfinitive().all().text();
+        }
+        if (tags.indexOf('Noun') !== -1 && tags.indexOf('Plural') !== -1) {
+          expression = wordNlp.nouns().toSingular().all().text();
+        }
         notes = await this.dicts[this.current].findTerm(expression.toLowerCase());
       }
     }

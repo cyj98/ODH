@@ -56,11 +56,10 @@ class builtin_enen_TheFreeDictionary {
     const definitions = [];
 
     sections.forEach((section) => {
-      const pos = `<span class="pos">${dataSrcObj[section.dataSrc]}</span>`;
-      // const pos = `<span class="pos">${section.dataSrc}</span>`;
+      const sourceDict = `<span class="source_dict">${dataSrcObj[section.dataSrc]}</span>`;
       section.defs.forEach((def) => {
         const eng_tran = `<span class='eng_tran'>${def.def_en}</span>`;
-        let definition = `${pos}<span class='tran'>${eng_tran}</span>`;
+        let definition = `${sourceDict}<span class='tran'>${eng_tran}</span>`;
         const examps = def.examp;
 
         // make exmaple segement
@@ -91,7 +90,7 @@ class builtin_enen_TheFreeDictionary {
     let css = `
               <style>
                   span.band {color:#e52920;}
-                  span.pos  {text-transform:lowercase; font-size:0.9em; margin-right:5px; padding:2px 4px; color:white; background-color:#0d47a1; border-radius:3px;}
+                  span.source_dict  {text-transform:lowercase; font-size:0.9em; margin-right:5px; padding:2px 4px; color:white; background-color:#228B22; border-radius:3px;}
                   span.tran {margin:0; padding:0;}
                   span.eng_tran {margin-right:3px; padding:0;}
                   span.chn_tran {color:#0d47a1;}

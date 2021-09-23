@@ -156,6 +156,7 @@ class Ankiweb {
   }
 
   parseData(response) {
+    if (!/editor\.csrf_token2 = \'(.*)\';/.exec(response)) return;
     //return {deck:'default', model:'basic'};
     const token = /editor\.csrf_token2 = \'(.*)\';/.exec(response)[1];
     const models = JSON.parse(/editor\.models = (.*}]);/.exec(response)[1]); //[0] = the matching text, [1] = first capture group (what's inside parentheses)

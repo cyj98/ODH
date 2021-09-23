@@ -93,7 +93,7 @@ class ODHFront {
       idiomsResult = await getTranslation(textToSearchIdiom);
     }
 
-    if (!idiomsResult || (idiomsResult && idiomsResult.length == 0)) {
+    if (!idiomsResult || (idiomsResult && idiomsResult.length == 0) || !idiomsResult[0].matchWord) {
       this.notes = wordNotes;
     } else {
       const idiom = idiomsResult[0].matchWord;
@@ -226,11 +226,11 @@ class ODHFront {
   }
 
   async renderPopup(notes) {
-     let content = '';
+    let content = '';
 
     for (const [nindex, note] of notes.entries()) {
-      const connected = await isConnected()
-      let response
+      const connected = await isConnected();
+      let response;
       if (connected) {
         response = await findNotes(this.notes[nindex].expression);
       }
@@ -240,7 +240,7 @@ class ODHFront {
       let imageclass = '';
       if (services != 'none') {
         imageclass = connected ? 'class="odh-addnote"' : 'class="odh-addnote-disabled"';
-        if (services === 'ankiconnect') { 
+        if (services === 'ankiconnect') {
           if (response && response[0]) {
             image = 'good.png';
             imageclass = 'class="odh-addnote-disabled"';

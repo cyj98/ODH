@@ -133,6 +133,10 @@ class TextSourceRange {
     // let endContainer = this.rng.endContainer;
     let text = this.rng.endContainer.textContent;
     if (forwardcount === 1) {
+      if (!text.substr(pos).match(/[-A-Za-z']+/)) {
+        console.error(text.substr(pos));
+        return;
+      }
       const word = text.substr(pos).match(/[-A-Za-z']+/)[0];
       this.rng.setEnd(this.rng.endContainer, pos + word.length);
     } else {
