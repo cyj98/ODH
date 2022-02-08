@@ -8,7 +8,7 @@ class Ankiconnect {
     let request = { action, version, params };
     return new Promise((resolve, reject) => {
       $.ajax({
-        url: 'http://127.0.0.1:8765',
+        url: 'https://127.0.0.1:8765',
         type: 'POST',
         data: JSON.stringify(request),
         timeout,

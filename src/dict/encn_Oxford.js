@@ -137,10 +137,10 @@ class encn_Oxford {
                         : ''
 
                 let audios = []
-                audios[0] = `http://fanyi.baidu.com/gettts?lan=uk&text=${encodeURIComponent(
+                audios[0] = `https://fanyi.baidu.com/gettts?lan=uk&text=${encodeURIComponent(
                     expression
                 )}&spd=3&source=web`
-                audios[1] = `http://fanyi.baidu.com/gettts?lan=en&text=${encodeURIComponent(
+                audios[1] = `https://fanyi.baidu.com/gettts?lan=en&text=${encodeURIComponent(
                     expression
                 )}&spd=3&source=web`
 
